@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachable Machine Image Model</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-image: url('safety.jpg'); /* Light gray background */
+            color: #000000; /* Dark text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 30px;
+            background-color: #ffffff; /* White background */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #007bff; /* Blue heading */
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        h1 img {
+            height: 200px;
+            margin-right: 5px;
+        }
+
+        .lead {
+            color: #000000;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn-start {
+            background-color: #28a745; /* Green button */
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 23px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .btn-start:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        .video-container {
+            margin-top: 100px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #webcam-container {
+            border: 5px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .prediction-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .prediction-header {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff; /* Blue heading */
+        }
+
+        .prediction-values {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .prediction-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #28a745; /* Green text */
+            margin: 0 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #c8e6c9; /* Light green background */
+        }
+
+        .prediction-value::before {
+            content: '\2713'; /* Checkmark icon */
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+
+        .non-prediction-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .non-prediction-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #dc3545; /* Red heading */
+        }
+
+        .non-prediction-values {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .non-prediction-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #dc3545; /* Red text */
+            margin: 0 5px;
+        }
+
+        .non-prediction-value::before {
+            content: '\2718'; /* Cross mark icon */
+            font-size: 1rem;
+            margin-right: 5px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .footer p {
+            margin-bottom: 0;
+        }
+
+        .warning {
+            background-color: #f8d7da; /* Red background for warning */
+            color: #721c24; /* Dark red text */
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        <img src="pic.jpg" alt="Deep Vision">
+    </h1>
+    <p class="lead">A Safety Detection Model for Industrial Workers<br> <b>PLEASE WEAR HELMETS AND THE NECESSARY SAFETY GEARS WHILE ON DUTY ! </b></br></p>
+    <button class="btn btn-start" onclick="init()">Start</button>
+
+    <div class="video-container">
+        <div id="webcam-container"></div>
+    </div>
+
+    <div class="prediction-container">
+        <h2 class="prediction-header">Predicted Values</h2>
+        <div class="prediction-values" id="prediction-values"></div>
+    </div>
+
+    <div class="non-prediction-container">
+        <h2 class="non-prediction-header">Non-Predicted Values</h2>
+        <div class="non-prediction-values" id="non-prediction-values"></div>
+    </div>
+
+    <div class="footer">
+        <p>Created by: <br><b>Kevin Jimmy</b><br><br><b>THANK YOU!</b></p>
+    </footer>
+
+    </div>
+
+    <!-- Warning message -->
+    <div class="warning" id="warning" style="display: none;">
+        Please wear helmet, safety jackets, and safety shoes in the work environment for your safety.
+    </div>
+</div>
+
+<!-- TensorFlow.js libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+<script>
+    const URL = "https://teachablemachine.withgoogle.com/models/z588a6qaI/"; // Your Teachable Machine model URL
+    let model, webcam, predictionValues, nonPredictionValues, warning;
+
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+
+        const flip = true;
+        webcam = new tmImage.Webcam(300, 300, flip); // Increase webcam size
+        await webcam.setup();
+        await webcam.play();
+
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+        predictionValues = document.getElementById("prediction-values");
+        nonPredictionValues = document.getElementById("non-prediction-values");
+        warning = document.getElementById("warning");
+
+        loop();
+    }
+
+    async function loop() {
+        webcam.update();
+        await predict();
+        requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        let maxProbability = 0;
+        let predictedClass = '';
+        let nonPredictedClasses = '';
+
+        for (let i = 0; i < prediction.length; i++) {
+            if (prediction[i].probability > maxProbability) {
+                maxProbability = prediction[i].probability;
+                predictedClass = prediction[i].className;
+            } else {
+                nonPredictedClasses += `<div class="non-prediction-value">${prediction[i].className}</div>`;
+            }
+        }
+
+        // Display the predicted class with a green tick
+        predictionValues.innerHTML = `<div class="prediction-value">${predictedClass}</div>`;
+
+        // Display non-predicted classes
+        nonPredictionValues.innerHTML = nonPredictedClasses;
+
+        // Show warning if prediction indicates lack of safety
+        if (predictedClass === "No Safety") {
+            warning.style.display = "block";
+        } else {
+            warning.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
