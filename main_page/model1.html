@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepVision-kevin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url('images.jpg');
+            font-family: 'Roboto', sans-serif;
+            color: rgb(0, 0, 0); /* Dark text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 10px;
+            background-color: #fff; /* White background */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #007bff; /* Blue heading */
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 img {
+            height: 200px;
+            margin-right: 5px;
+        }
+
+        .lead {
+            color: #000000;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .btn-start {
+            background-color: #2774AE;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 23px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .btn-start:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+        .video-container {
+            margin-top: 100px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #webcam-container {
+            border: 5px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .prediction-container {
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9; /* Light gray background */
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .prediction-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff; /* Blue heading */
+            text-align: center;
+        }
+
+        .prediction-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .prediction-item {
+            margin-bottom: 10px;
+            color: #333; /* Dark text */
+        }
+
+        .successful-predictions {
+            background-color: #dff0d8; /* Green background for successful predictions */
+        }
+
+        .unsuccessful-predictions {
+            background-color: #f8d7da; /* Red background for unsuccessful predictions */
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #000000;
+        }
+
+        .footer p {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        <img src="pic.jpg">
+    </h1>
+    <p class="lead">A waste Classifier model trained with Convolutional Neural Networks</p>
+    <p class="lead">Here, <span class="text-danger">0%</span> means <span class="text-danger">FALSE</span> and <span class="text-success">100%</span> means <span class="text-success">TRUE</span> !</p>
+    <button class="btn btn-start" onclick="init()">Start</button>
+    
+
+    <div class="video-container">
+        <div id="webcam-container"></div>
+    </div>
+
+    <div class="grid-container">
+        <div class="prediction-container successful-predictions">
+            <h2 class="prediction-header">Successful Predictions ✔️ </h2>
+            <ul class="prediction-list" id="successful-predictions"></ul>
+        </div>
+        <div class="prediction-container unsuccessful-predictions">
+            <h2 class="prediction-header">Unsuccessful Predictions ❌ </h2>
+            <ul class="prediction-list" id="unsuccessful-predictions"></ul>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Created by: Kevin Jimmy</p>
+        <p>THANK YOU!</p>
+    </div>
+</div>
+
+<!-- TensorFlow.js libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+<script>
+    // Load the Teachable Machine model
+    const URL = "https://teachablemachine.withgoogle.com/models/YzVFlf_9j/";
+    let model, webcam, successfulPredictionsList, unsuccessfulPredictionsList, maxPredictions;
+
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // Load the model and metadata
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        // Setup webcam
+        const flip = true; // whether to flip the webcam
+        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
+        await webcam.setup();
+        await webcam.play();
+
+        // Append webcam container to the DOM
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+        // Get successful and unsuccessful predictions lists
+        successfulPredictionsList = document.getElementById("successful-predictions");
+        unsuccessfulPredictionsList = document.getElementById("unsuccessful-predictions");
+
+        // Start prediction loop
+        loop();
+    }
+
+    async function loop() {
+        webcam.update(); // Update webcam frame
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        successfulPredictionsList.innerHTML = '';
+        unsuccessfulPredictionsList.innerHTML = '';
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const classPrediction = prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(2) + '%';
+            const predictionItem = document.createElement("li");
+            predictionItem.classList.add("prediction-item");
+            predictionItem.innerText = classPrediction;
+
+            // Highlight predictions with green text for successful predictions and red for unsuccessful predictions
+            if (prediction[i].probability >= 0.8) {
+                predictionItem.classList.add('text-success');
+                successfulPredictionsList.appendChild(predictionItem);
+            } else if (prediction[i].probability < 0.5) {
+                predictionItem.classList.add('text-danger');
+                unsuccessfulPredictionsList.appendChild(predictionItem);
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
