@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-image: url("crops.jpeg");
+            color: #333; /* Dark text */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff; /* White background */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #007bff; /* Blue heading */
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .lead {
+            color: #000000;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn-start {
+            background-color: #28a745; /* Green button */
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 23px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto 30px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-start:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        .video-container {
+            text-align: center;
+        }
+
+        #webcam-container {
+            border: 5px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .prediction-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .prediction-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff; /* Blue heading */
+        }
+
+        .prediction-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .prediction-item {
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #28a745; /* Green text */
+            display: inline-block;
+        }
+
+        .prediction-item::before {
+            content: '\2713'; /* Checkmark icon */
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: #28a745; /* Green text */
+        }
+
+        .other-predictions-header {
+            font-size: 1rem;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #007bff; /* Blue heading */
+        }
+
+        .other-predictions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .other-predictions-item {
+            margin: 5px;
+            padding: 5px 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #333; /* Dark text */
+            border-radius: 5px;
+            background-color: #f8f9fa; /* Light gray background */
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .footer p {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Add your image logo here -->
+    <img src="pic.jpg" alt="Your Image Logo" width="300">
+    
+    <p class="lead">A Crop Disease Identification model trained with Convolutional Neural Networks, which can detect 15 different variations of diseases that often affects crops like Tomatoes, Rice, Potatoes and many others...</p>
+    <button class="btn btn-start" onclick="init()">Start</button>
+
+    <div class="video-container">
+        <div id="webcam-container"></div>
+    </div>
+
+    <div class="prediction-container">
+        <h2 class="prediction-header">Prediction</h2>
+        <ul class="prediction-list" id="prediction-list"></ul>
+    </div>
+
+    <div class="other-predictions-container">
+        <h2 class="other-predictions-header">Other Diseases :</h2>
+        <ul class="other-predictions-list" id="other-predictions-list"></ul>
+    </div>
+
+    <div class="footer">
+        <p>Created by: Kevin Jimmy</p>
+    </div>
+</div>
+
+<!-- TensorFlow.js libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+<script>
+    const URL = "https://teachablemachine.withgoogle.com/models/TXIExi8iT/"; // Your Teachable Machine model URL
+    let model, webcam, predictionList, otherPredictionsList;
+
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+
+        const flip = true;
+        webcam = new tmImage.Webcam(300, 300, flip); // Increase webcam size
+        await webcam.setup();
+        await webcam.play();
+
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+        predictionList = document.getElementById("prediction-list");
+        otherPredictionsList = document.getElementById("other-predictions-list");
+
+        loop();
+    }
+
+    async function loop() {
+        webcam.update();
+        await predict();
+        requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        predictionList.innerHTML = '';
+        otherPredictionsList.innerHTML = '';
+
+        for (let i = 0; i < prediction.length; i++) {
+            if (prediction[i].probability >= 0.75) {
+                const classPrediction = prediction[i].className;
+                const predictionItem = document.createElement("li");
+                predictionItem.classList.add("prediction-item");
+                predictionItem.innerText = classPrediction;
+                predictionList.appendChild(predictionItem);
+            } else {
+                const classPrediction = prediction[i].className;
+                const predictionItem = document.createElement("li");
+                predictionItem.classList.add("other-predictions-item");
+                predictionItem.innerText = classPrediction;
+                otherPredictionsList.appendChild(predictionItem);
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
