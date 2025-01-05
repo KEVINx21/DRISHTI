@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepVision-kevin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>
+            <img src="in1.png">
+        </h1>
+        <h1 class="lead" style="font-size: 2.3em; font-weight: bold; color: #007bff; margin-bottom: 20px;">Convolutional Neural Networks</h1>
+        <p class="lead" style="color: black; font-size: 1.25em;">
+            Convolutional Neural Networks (CNNs) are a type of deep learning algorithm that analyze and learn features from large amounts of data. CNNs are a subset of machine learning and are a core part of deep learning algorithms. They are especially useful for finding patterns in images to recognize objects, classes, and categories.
+        </p>
+        <div style="clear: both;"></div> <!-- Clear floats -->
+        <div style="margin-top: 20px;">
+            <div style="width: 100%; ">
+                <img src="pic1.jpeg" style="width: 100%; height: 100%; font-size: 2.0em;">
+                <!-- <p style="text-align: center;font-size: 1.4em;" >Architecture of a Convolutional Neural Network</p> -->
+            </div>
+            <!-- <div style="width: 50%;">
+                <img src="pic2.png" style="width: 100%; height: auto;">
+                <p style="text-align: center;">Application of CNNs in Image Recognition</p>
+            </div> -->
+        </div>
+        <p class="lead" style="color: black;font-size: 1.25em;">
+            The image depicts the architecture of a CNN, showing how it processes data through multiple layers including convolutional layers, pooling layers, and fully connected layers. The second image demonstrates the application of CNNs in image recognition, where the network learns to identify and classify objects within images.
+        </p>
+        <h2 style="text-align: center;">Select a Model:</h2>
+        <div id="model-buttons">
+            <button class="btn btn-model" data-model="model1" onclick="window.location.href = 'model1.html'">Model 1</button>
+<button class="btn btn-model" data-model="model2" onclick="window.location.href = 'model2.html'">Model 2</button>
+<button class="btn btn-model" data-model="model3" onclick="window.location.href = 'model3.html'">Model 3</button>
+<button class="btn btn-model" data-model="model4" onclick="window.location.href = 'model4.html'">Model 4</button>
+        </div>
+    </div>
+    
+
+<div id="model-info" class="model-info-container">
+    <div class="model-card">
+        <h3>Model FruitsVegetables</h3>
+        <p>This model can classify various fruits and vegetables. It has been trained on a dataset containing images of apples, oranges, bananas, tomatoes, carrots, and broccoli, among others.</p>
+        <p>The model uses deep learning techniques to identify the different types of fruits and vegetables with high accuracy.</p>
+        <button class="btn-start" onclick="startModel('FruitsVegetables')">Start Model FruitsVegetables</button>
+    </div>
+</div>
+
+<!-- TensorFlow.js libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+</body>
+</html>
